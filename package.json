@@ -1,0 +1,20 @@
+{
+  "name": "obsidian-markup-for-agents",
+  "version": "1.0.0",
+  "description": "Annotate passages in your notes and send them, with your selection, to Claude Code and Codex running in Obsidian terminals.",
+  "main": "main.js",
+  "scripts": {
+    "build": "node esbuild.config.mjs",
+    "version": "node version-bump.mjs && git add manifest.json versions.json"
+  },
+  "keywords": [
+    "obsidian",
+    "claude-code",
+    "codex"
+  ],
+  "author": "April",
+  "license": "MIT",
+  "devDependencies": {
+    "esbuild": "^0.25.0"
+  }
+}
