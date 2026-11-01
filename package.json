@@ -1,6 +1,6 @@
 {
   "name": "obsidian-markup-for-agents",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Annotate passages in your notes and send them, with your selection, to Claude Code and Codex running in Obsidian terminals.",
   "main": "main.js",
   "scripts": {
