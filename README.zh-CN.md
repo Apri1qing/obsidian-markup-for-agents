@@ -16,17 +16,52 @@
 - 已安装 [Claude Code](https://claude.com/claude-code) 和/或 [Codex CLI](https://github.com/openai/codex)。
 - [Terminal](https://github.com/polyipseity/obsidian-terminal) 插件，用于在 Obsidian 里运行助手并显示面板。选区共享在任何以 Vault 目录为工作目录的终端里都能用。
 
-## 使用
+## 快速上手
 
-1. 在工作目录为 Vault 的终端里启动 `claude` 或 `codex`。
-2. 连接 IDE 集成：
-   - **Claude Code**：开启 *Auto-connect to IDE*（`/config`）后自动连接，否则输入 `/ide`。
-   - **Codex**：每个会话输入一次 `/ide`。开启后它的底部栏会显示 `IDE context`。
-3. 批注：选中文字，用编辑器右键菜单或命令面板。想用快捷键，在 *设置 → 快捷键* 里给 *添加到 Claude* 或 *添加到 Codex* 指定一个，焦点在终端里时也有效。
-4. 终端下方的面板会显示待发批注的数量。点击它打开列表，再点某一条，就会跳转到笔记里对应的段落。点击笔记里的编号标记可以编辑或删除批注，也可以用列表里的删除按钮。把被批注的文字整段删掉，对应的批注也会一起消失。
-5. 在终端里写消息并回车。
+### 1. 在终端里启动助手
 
-### 命令
+先安装 Terminal 插件，再在 Vault 根目录打开终端：在命令面板里搜索 `Terminal`，选择在根目录打开的整合式终端。把它的标签拖到右侧边栏，笔记和助手就并排了。在里面运行 `claude` 或 `codex`。
+
+### 2. 连接 IDE 集成
+
+- **Claude Code**：开启 *Auto-connect to IDE*（`/config`）后自动连接，否则输入 `/ide`。
+- **Codex**：每个会话输入一次 `/ide`。开启后它的底部栏会显示 `IDE context`。
+
+连上之后，助手的输入框会显示你当前所在的笔记，终端下方的面板同步显示。没连上时，面板会提示 *未连接*，并告诉你输入 `/ide`。
+
+![Claude Code 已连接：输入框显示当前笔记，终端下方的面板同步显示](https://raw.githubusercontent.com/Apri1qing/obsidian-markup-for-agents/main/images/01-connected.png)
+
+### 3. 在笔记里选中文字
+
+你在编辑器里选中什么，助手就看到什么。输入框和面板会显示选区，例如 *1 line selected*。不需要粘贴。
+
+![选中一段文字，助手的输入框和面板显示 “1 line selected”](https://raw.githubusercontent.com/Apri1qing/obsidian-markup-for-agents/main/images/02-select.png)
+
+### 4. 添加批注
+
+选中文字后，右键选择 *添加到 Claude*（或 *添加到 Codex*），也可以在命令面板里运行同名命令。写一句评论，点 *添加批注*。
+
+![“添加到 Claude” 对话框，包含选中的段落和评论](https://raw.githubusercontent.com/Apri1qing/obsidian-markup-for-agents/main/images/03-add-annotation.png)
+
+被批注的文字会在笔记里高亮并编号，面板会统计等待发给该助手的批注数量。可以添加任意多条，也可以跨多篇笔记。
+
+![笔记里两处批注；面板显示 “2 annotations”，消息可以发送了](https://raw.githubusercontent.com/Apri1qing/obsidian-markup-for-agents/main/images/04-annotated.png)
+
+### 5. 查看、跳转和编辑
+
+点击面板里的批注数量打开列表。点某一条就会跳转到笔记里对应的段落，点垃圾桶按钮删除它。点击笔记里的编号标记可以编辑或删除批注。把被批注的文字整段删掉，对应的批注也会一起消失。
+
+![批注列表，每一条右侧有删除按钮](https://raw.githubusercontent.com/Apri1qing/obsidian-markup-for-agents/main/images/05-annotation-list.png)
+
+### 6. 发送
+
+在终端里写消息并回车。所有待发批注会连同你当前的选区一起送出，消息提交后自动清除。
+
+### 7. 可选：设置快捷键
+
+默认不设置任何快捷键。打开 *设置 → 快捷键*，搜索 `Markup for Agents`，给 *添加到 Claude* 和 *添加到 Codex* 指定按键，例如 `Cmd+Alt+C` 和 `Cmd+Alt+X`。焦点在终端里时也有效。
+
+## 命令
 
 | 命令 | 作用 |
 | --- | --- |
