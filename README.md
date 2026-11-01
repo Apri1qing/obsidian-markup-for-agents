@@ -51,6 +51,8 @@ Whatever you select in the editor is what the agent sees. The input and the pane
 
 With text selected, right-click and choose *Add to Claude* (or *Add to Codex*), or run the same command from the command palette. Write a comment and press *Add annotation*.
 
+To show the agent an image, paste it into the comment. It is saved to your attachment folder, as when you paste an image into a note, and the agent opens it. Images embedded in the annotated passage reach the agent the same way.
+
 ![The Add to Claude dialog with the selected passage and a comment](https://raw.githubusercontent.com/Apri1qing/obsidian-markup-for-agents/main/images/03-add-annotation.png)
 
 The passage is highlighted and numbered in the note, and the panel counts the annotations waiting for that agent. Add as many as you like, in as many notes as you like. Claude annotations are orange.
@@ -88,7 +90,8 @@ No hotkeys are set by default. Open *Settings → Hotkeys*, search for `Markup f
 - Starts a WebSocket server on `127.0.0.1` (random port, protected by a token) and writes `~/.claude/ide/<port>.lock` so that Claude Code finds it. The file is removed when the plugin unloads.
 - For Codex, answers on Codex's local IPC channel (`~/.codex/ipc/ipc.sock`, or `\\.\pipe\codex-ipc` on Windows). If another program such as the Codex desktop app already owns that channel, the plugin joins it as a client instead of competing.
 - Reads the visible screen of terminals to see the agent's input and footer, and runs `ps` to tell which terminal runs which agent.
-- Makes no network requests. The only data that leaves Obsidian is what you hand to the agents: the selected text, open tab names and annotations.
+- Saves images pasted into annotation comments to your attachment folder.
+- Makes no network requests. The only data that leaves Obsidian is what you hand to the agents: the selected text, open tab names, annotations and the paths of their images.
 
 ## Limitations
 

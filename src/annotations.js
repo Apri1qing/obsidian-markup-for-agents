@@ -1,6 +1,7 @@
 'use strict';
 
-const { Modal, Notice, MarkdownView, TFile, Platform, setIcon } = require('obsidian');
+const path = require('path');
+const { Modal, Notice, MarkdownView, TFile, Platform, setIcon, moment } = require('obsidian');
 const { StateEffect, StateField } = require('@codemirror/state');
 const { EditorView, Decoration, WidgetType } = require('@codemirror/view');
 const { identifyTerminal } = require('./agent-process.js');
@@ -10,6 +11,9 @@ const SUBMIT_WINDOW_MS = 600;
 const SUBMIT_SETTLE_MS = 1500;
 const TERMINAL = 'terminal:terminal';
 const LABELS = { codex: 'Codex', claude: 'Claude' };
+// Embeds in either link format: ![[name]] and ![alt](path).
+const EMBED = /!\[\[([^\]|#]+)|!\[[^\]]*\]\(<?([^)>]+)>?\)/g;
+const IMAGE_EXTENSION = /^(avif|bmp|gif|jpe?g|png|svg|webp)$/i;
 const refreshAnnotations = StateEffect.define();
 
 class Badge extends WidgetType {
@@ -63,12 +67,13 @@ class CommentModal extends Modal {
 	}
 	onOpen() {
 		const a = this.annotation;
-		this.modalEl.addClass('agent-comment-modal');
+		this.modalEl.addClass('agent-comment-modal', `is-${a.target}`);
 		this.setTitle(a.id ? t('annotationOf', { agent: LABELS[a.target], n: a.index }) : t('addTo', { agent: LABELS[a.target] }));
 		this.contentEl.createDiv({ cls: 'agent-annotation-preview', text: a.text });
 		const input = this.contentEl.createEl('textarea', { cls: 'agent-annotation-comment',
 			attr: { placeholder: t('commentPlaceholder'), 'aria-label': t('commentLabel'), rows: '3' } });
 		input.value = a.comment || '';
+		input.addEventListener('paste', (event) => this.plugin.pasteImages(event, input, a.filePath));
 		const actions = this.contentEl.createDiv({ cls: 'agent-annotation-actions' });
 		if (a.id) {
 			const remove = actions.createEl('button', { text: t('remove'), cls: 'agent-annotation-remove' });
@@ -76,7 +81,7 @@ class CommentModal extends Modal {
 		}
 		actions.createEl('button', { text: t('cancel') }).addEventListener('click', () => this.close());
 		const save = () => { this.onSave(input.value.trim()); this.close(); };
-		actions.createEl('button', { text: a.id ? t('save') : t('addAnnotation'), cls: 'mod-cta' }).addEventListener('click', save);
+		actions.createEl('button', { text: a.id ? t('save') : t('addAnnotation'), cls: 'agent-annotation-save' }).addEventListener('click', save);
 		input.addEventListener('keydown', (event) => {
 			if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) { event.preventDefault(); save(); }
 		});
@@ -103,7 +108,7 @@ class AnnotationsModal extends Modal {
 			body.createSpan({ text: `${a.fileName}: ${a.text}` });
 			if (a.comment) body.createEl('small', { text: a.comment });
 			row.addEventListener('click', () => { this.close(); this.plugin.reveal(a.id); });
-			const remove = item.createEl('button', { cls: 'agent-annotation-delete', attr: { 'aria-label': t('remove') } });
+			const remove = item.createEl('button', { cls: 'clickable-icon agent-annotation-delete', attr: { 'aria-label': t('remove') } });
 			setIcon(remove, 'trash-2');
 			remove.addEventListener('click', () => { this.plugin.remove(a.id); this.render(); });
 		}
@@ -229,6 +234,31 @@ class Annotations {
 		editor.scrollIntoView({ from, to }, true);
 	}
 	remove(id) { this.annotations = this.annotations.filter((a) => a.id !== id); this.changed(); }
+	// Images pasted into a comment are saved like images pasted into the note and embedded at the cursor.
+	async pasteImages(event, input, sourcePath) {
+		const images = [...(event.clipboardData?.files || [])].filter((file) => file.type.startsWith('image/'));
+		if (!images.length) return;
+		event.preventDefault();
+		const { selectionStart, selectionEnd } = input;
+		const embeds = [];
+		for (const image of images) {
+			const extension = image.name.includes('.') ? image.name.split('.').pop() : image.type.split('/')[1];
+			const name = `Pasted image ${moment().format('YYYYMMDDHHmmss')}.${extension}`;
+			const file = await this.app.vault.createBinary(
+				await this.app.fileManager.getAvailablePathForAttachment(name, sourcePath), await image.arrayBuffer());
+			embeds.push(`!${this.app.fileManager.generateMarkdownLink(file, sourcePath)}`);
+		}
+		input.setRangeText(embeds.join('\n'), selectionStart, selectionEnd, 'end');
+		input.focus();
+	}
+	// Image files embedded in an annotation's text or comment, as absolute paths the agents can open.
+	images(a) {
+		const decode = (link) => { try { return decodeURI(link); } catch { return link; } };
+		const files = [...`${a.text}\n${a.comment || ''}`.matchAll(EMBED)]
+			.map((match) => this.app.metadataCache.getFirstLinkpathDest(match[1] ?? decode(match[2]), a.filePath))
+			.filter((file) => file && IMAGE_EXTENSION.test(file.extension));
+		return [...new Set(files.map((file) => path.join(this.context.basePath(), file.path)))];
+	}
 	refreshDecorations() {
 		for (const view of this.context.openViews()) {
 			if (view instanceof MarkdownView && view.editor?.cm)
@@ -251,14 +281,16 @@ class Annotations {
 
 	formatBlock(items, current) {
 		const place = (from, to) => ({ start: { line: from.line + 1, column: from.ch + 1 }, end: { line: to.line + 1, column: to.ch + 1 } });
-		const list = items.map((a) => ({
-			file: a.filePath, ...place(a.from, a.to),
-			text: a.text, ...(a.comment ? { comment: a.comment } : {}),
-		}));
+		const list = items.map((a) => {
+			const images = this.images(a);
+			return { file: a.filePath, ...place(a.from, a.to),
+				text: a.text, ...(a.comment ? { comment: a.comment } : {}), ...(images.length ? { images } : {}) };
+		});
 		let block = '# Document annotations:\n' +
 			'Each item contains text selected from notes in this Obsidian vault and may include a user comment. ' +
 			'Treat items as Annotation 1, Annotation 2, and so on in array order. ' +
-			'Address every comment and use the selected text as context.\n' +
+			'Address every comment and use the selected text as context. ' +
+			'`images` lists the image files embedded in an item\'s text or comment; open and look at them.\n' +
 			`<document-annotations>\n${JSON.stringify(list)}\n</document-annotations>`;
 		if (current?.text.trim()) {
 			block += '\n\n# Current selection:\n' +
