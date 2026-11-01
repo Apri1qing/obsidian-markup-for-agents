@@ -263,7 +263,9 @@ class Annotations {
 		if (current?.text.trim()) {
 			block += '\n\n# Current selection:\n' +
 				'The user also has this text selected in the editor; their message may refer to it.\n' +
-				`<current-selection>\n${JSON.stringify({ file: current.file.path, ...place(current.from, current.to), text: current.text })}\n</current-selection>`;
+				`<current-selection>\n${JSON.stringify({
+					file: current.file.path, ...place(current.from, current.to), text: current.text,
+				})}\n</current-selection>`;
 		}
 		return block;
 	}
@@ -285,7 +287,9 @@ class Annotations {
 	}
 
 	hasHotkey(id, event) {
-		const pressed = new Set([event.metaKey && 'Meta', event.ctrlKey && 'Ctrl', event.altKey && 'Alt', event.shiftKey && 'Shift'].filter(Boolean));
+		const pressed = new Set([
+			event.metaKey && 'Meta', event.ctrlKey && 'Ctrl', event.altKey && 'Alt', event.shiftKey && 'Shift',
+		].filter(Boolean));
 		return (this.app.hotkeyManager.getHotkeys(id) || []).some(({ modifiers, key }) => {
 			const wanted = new Set(modifiers.map((modifier) => (modifier === 'Mod' ? (Platform.isMacOS ? 'Meta' : 'Ctrl') : modifier)));
 			if (wanted.size !== pressed.size || ![...wanted].every((modifier) => pressed.has(modifier))) return false;

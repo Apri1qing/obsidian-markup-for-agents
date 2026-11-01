@@ -44,7 +44,9 @@ function encodeFrame(opcode, data) {
 	const payload = typeof data === 'string' ? Buffer.from(data) : data;
 	let header;
 	if (payload.length < 126) header = Buffer.from([0x80 | opcode, payload.length]);
-	else if (payload.length < 65536) { header = Buffer.alloc(4); header[0] = 0x80 | opcode; header[1] = 126; header.writeUInt16BE(payload.length, 2); }
+	else if (payload.length < 65536) {
+		header = Buffer.alloc(4); header[0] = 0x80 | opcode; header[1] = 126; header.writeUInt16BE(payload.length, 2);
+	}
 	else { header = Buffer.alloc(10); header[0] = 0x80 | opcode; header[1] = 127; header.writeBigUInt64BE(BigInt(payload.length), 2); }
 	return Buffer.concat([header, payload]);
 }
@@ -149,7 +151,12 @@ class ClaudeIde {
 			if (!client.socket.writable) return;
 			if (frame.opcode === OP.PING) client.socket.write(encodeFrame(OP.PONG, frame.payload));
 			else if (frame.opcode === OP.PONG) client.alive = true;
-			else if (frame.opcode === OP.CLOSE) { client.socket.write(encodeFrame(OP.CLOSE, Buffer.alloc(0))); client.socket.destroy(); this.clients.delete(client); return; }
+			else if (frame.opcode === OP.CLOSE) {
+				client.socket.write(encodeFrame(OP.CLOSE, Buffer.alloc(0)));
+				client.socket.destroy();
+				this.clients.delete(client);
+				return;
+			}
 			else if (frame.fin && frame.opcode === OP.TEXT) this.message(client, frame.payload.toString());
 			else { client.socket.destroy(); this.clients.delete(client); return; }
 		}
