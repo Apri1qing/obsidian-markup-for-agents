@@ -1,6 +1,6 @@
 'use strict';
 
-const { Modal, Notice, MarkdownView, TFile, setIcon } = require('obsidian');
+const { Modal, Notice, MarkdownView, TFile, Platform, setIcon } = require('obsidian');
 const { StateEffect, StateField } = require('@codemirror/state');
 const { EditorView, Decoration, WidgetType } = require('@codemirror/view');
 const { identifyTerminal } = require('./agent-process.js');
@@ -132,7 +132,6 @@ class Annotations {
 		this.context.pending = (target) => this.selectionFor(target);
 		for (const target of ['codex', 'claude']) {
 			plugin.addCommand({ id: `add-to-${target}`, name: t('addTo', { agent: LABELS[target] }),
-				hotkeys: [{ modifiers: ['Mod', 'Alt'], key: target === 'codex' ? 'x' : 'c' }],
 				callback: () => {
 					const view = this.context.view();
 					this.promptAdd(target, view?.editor, view);
@@ -269,22 +268,30 @@ class Annotations {
 		return block;
 	}
 
+	// The terminal swallows keys before Obsidian's hotkeys see them, so these commands' hotkeys also work from there.
 	onKeyDown(event) {
-		if (!event.defaultPrevented && !event.isComposing && event.metaKey && event.altKey &&
-			!event.shiftKey && !event.ctrlKey) {
-			const target = { KeyC: 'claude', KeyX: 'codex' }[event.code];
-			if (target) {
-				const id = `markup-for-agents:add-to-${target}`;
-				if (this.app.hotkeyManager.customKeys[id] === undefined) {
-					event.preventDefault();
-					event.stopImmediatePropagation();
-					this.app.commands.executeCommandById(id);
-					return;
-				}
+		if (!event.defaultPrevented && !event.isComposing) {
+			const id = ['claude', 'codex'].map((target) => `${this.plugin.manifest.id}:add-to-${target}`)
+				.find((candidate) => this.hasHotkey(candidate, event));
+			if (id) {
+				event.preventDefault();
+				event.stopImmediatePropagation();
+				this.app.commands.executeCommandById(id);
+				return;
 			}
 		}
 		if (event.key === 'Enter' && !event.shiftKey && !event.altKey && !event.ctrlKey && !event.metaKey &&
 			!event.isComposing && this.annotations.length) this.onEnter(event.target);
+	}
+
+	hasHotkey(id, event) {
+		const pressed = new Set([event.metaKey && 'Meta', event.ctrlKey && 'Ctrl', event.altKey && 'Alt', event.shiftKey && 'Shift'].filter(Boolean));
+		return (this.app.hotkeyManager.getHotkeys(id) || []).some(({ modifiers, key }) => {
+			const wanted = new Set(modifiers.map((modifier) => (modifier === 'Mod' ? (Platform.isMacOS ? 'Meta' : 'Ctrl') : modifier)));
+			if (wanted.size !== pressed.size || ![...wanted].every((modifier) => pressed.has(modifier))) return false;
+			if (!/^[a-z0-9]$/i.test(key)) return event.key === key;
+			return event.code === (/\d/.test(key) ? `Digit${key}` : `Key${key.toUpperCase()}`);
+		});
 	}
 
 	// A submitted message clears the input and adds a line to the conversation above it; an Enter on an

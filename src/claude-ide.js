@@ -87,7 +87,6 @@ class ClaudeIde {
 		});
 		this.writeLock();
 		this.heartbeat = window.setInterval(() => this.ping(), HEARTBEAT_MS);
-		console.debug(`[Markup for Agents] Claude Code IDE listening on 127.0.0.1:${this.port}`);
 	}
 
 	stop() {

@@ -51,6 +51,7 @@
 .agent-annotation-row-body > * { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .agent-annotation-row-body small { color: var(--text-muted); }
 
+.agent-panel-hidden { display: none; }
 .agent-panel-host { display: flex; flex-direction: column; }
 .agent-panel-host > :not(.agent-panel) { flex: 1 1 auto; min-height: 0; }
 .agent-panel {

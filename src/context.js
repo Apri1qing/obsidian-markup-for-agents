@@ -1,6 +1,6 @@
 'use strict';
 
-const { MarkdownView } = require('obsidian');
+const { MarkdownView, FileSystemAdapter } = require('obsidian');
 
 // Tracks the markdown view whose note and selection are shared with the agents.
 class NoteContext {
@@ -28,7 +28,10 @@ class NoteContext {
 		return this.app.workspace.getLeavesOfType('markdown').map((leaf) => leaf.view).filter((view) => view.file);
 	}
 
-	basePath() { return this.app.vault.adapter.getBasePath(); }
+	basePath() {
+		const adapter = this.app.vault.adapter;
+		return adapter instanceof FileSystemAdapter ? adapter.getBasePath() : '';
+	}
 
 	// Selection shared with an agent. Pending annotations of that agent take the place of the editor selection.
 	selection(target, view = this.view()) {

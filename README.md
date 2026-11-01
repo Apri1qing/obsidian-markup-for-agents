@@ -22,7 +22,7 @@ Annotate passages in your notes and send them, with your comments, to [Claude Co
 2. Connect the IDE integration:
    - **Claude Code** connects by itself when *Auto-connect to IDE* is enabled (`/config`). Otherwise type `/ide`.
    - **Codex** needs `/ide` once per session. Its footer shows `IDE context` when it is on.
-3. To annotate, select text and use the editor context menu, the command palette, or the default hotkeys (`Mod+Alt+C` for Claude, `Mod+Alt+X` for Codex; change them under *Settings → Hotkeys*).
+3. To annotate, select text and use the editor context menu or the command palette. For a hotkey, assign one to *Add to Claude* or *Add to Codex* under *Settings → Hotkeys*; it also works while a terminal has focus.
 4. The panel under the terminal shows how many annotations are waiting. Click it to see the list, and click an entry to jump to that passage in its note. Click a numbered badge in the note to edit or remove the annotation, or use the trash button in the list. Deleting the annotated text removes its annotation.
 5. Write your message in the terminal and press Enter.
 

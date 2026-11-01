@@ -84,9 +84,9 @@ class AgentPanel {
 			panel.selection.setText(label ? (offline ? label : `⧉ ${label}`) : '');
 			panel.selection.toggleClass('is-offline', offline);
 			panel.selection.setAttr('title', failure);
-			panel.selection.toggle(!!label);
+			panel.selection.toggleClass('agent-panel-hidden', !label);
 			panel.annotations.setText(t('annotationCount', { n: count }));
-			panel.annotations.toggle(count > 0);
+			panel.annotations.toggleClass('agent-panel-hidden', count === 0);
 		}
 	}
 
